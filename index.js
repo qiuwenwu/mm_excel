@@ -125,9 +125,12 @@ Excel.prototype.load_filter = function(item) {
 /**
  * 读取对应列
  */
-Excel.prototype.load_col = function() {
+Excel.prototype.load_col = function(sheet) {
 	var col = this.columns();
-	var row = this.sheet.getRow(1);
+	if (!sheet) {
+		sheet = this.sheet;
+	}
+	var row = sheet.getRow(1);
 	var kv = {};
 	var idx = 0;
 	var fmt = this.config.format;
@@ -138,7 +141,7 @@ Excel.prototype.load_col = function() {
 			if (o.value == oj.header) {
 				kv[idx] = {
 					key: oj.key,
-					type: oj.type
+					dataType: oj.type || 'varchar'
 				};
 				continue;
 			};
@@ -148,7 +151,7 @@ Excel.prototype.load_col = function() {
 			if (o.value == oj.title) {
 				kv[idx] = {
 					key: oj.key,
-					type: oj.type
+					dataType: oj.type || 'int'
 				};
 				continue;
 			};
@@ -167,10 +170,9 @@ Excel.prototype.save_col = function() {
 	fmt.map((m) => {
 		for (var i = 0; i < col.length; i++) {
 			var o = col[i];
-			if (o.key == m.id) {
-				o.key = m.key;
+			if (o.key == m.key) {
 				o.header = m.title;
-				o.type = 'string';
+				o.dataType = 'varchar';
 			}
 		}
 	});
@@ -225,50 +227,73 @@ Excel.prototype.save_filter = function(item) {
  * @return {Object} 返回excel对象
  * @return {String|Number} nameOrId 名称或表id
  */
-Excel.prototype.load = async function(func, nameOrId) {
+Excel.prototype.load = function(func, nameOrId) {
+	var _this = this;
 	if (!this.book) {
 		this.add_book();
 	}
-	if (this.book) {
-		var f = this.config.file;
-		var arr = f.split('.');
-		var ext = arr[arr.length - 1];
-		if (ext == 'xls') {
-			ext = 'xlsx';
-		}
-		await this.book[ext].readFile(f.fullname(__dirname));
-		this.sheet = this.book.getWorksheet(nameOrId !== undefined ? nameOrId : this.config.sheet);
-		if (this.sheet) {
-			var list = [];
-			var cols = this.load_col();
-			if (func) {
-				this.sheet.eachRow((o) => {
-					var obj = {};
-					for (var k in cols) {
-						obj[cols[k].key] = o.getCell(Number(k)).value;
-					}
-					list.push(func(obj));
-				});
-			} else {
-				this.sheet.eachRow((o) => {
-					var obj = {};
-					for (var k in cols) {
-						obj[cols[k].key] = o.getCell(Number(k)).value;
-					}
-					list.push(this.load_filter(obj));
-				});
+	var cg = this.config;
+	// console.log(this.book);
+	return new Promise(function(resolve, reject) {
+		if (_this.book) {
+			var f = cg.file;
+			var arr = f.split('.');
+			var ext = arr[arr.length - 1];
+			if (ext === 'xls') {
+				ext = 'xlsx';
 			}
-			return list.length > 0 ? list.splice(1) : [];
+			try {
+				_this.book[ext].readFile(f.fullname(__dirname)).then(function() {
+					var sheet = _this.book.getWorksheet(nameOrId !== undefined ? nameOrId : cg.sheet);
+					if (sheet) {
+						var list = [];
+						var cols = _this.load_col(sheet);
+						if (func) {
+							sheet.eachRow((o) => {
+								var obj = {};
+								for (var k in cols) {
+									var val = o.getCell(Number(k)).value;
+									if (cols[k].dataType.indexOf('int') !== -1 || cols[k].dataType === 'double' || cols[k].dataType ===
+										'float') {
+										val = Number(val || '0');
+									}
+									obj[cols[k].key] = val;
+								}
+								list.push(func(obj));
+							});
+						} else {
+							sheet.eachRow((o) => {
+								var obj = {};
+								for (var k in cols) {
+									var val = o.getCell(Number(k)).value;
+									if (cols[k].dataType.indexOf('int') !== -1 || cols[k].dataType === 'double' || cols[k].dataType ===
+										'float') {
+										val = Number(val || '0');
+									}
+									obj[cols[k].key] = val;
+								}
+								list.push(_this.load_filter(obj));
+							});
+						}
+						var lt = list.length > 0 ? list.splice(1) : [];
+						resolve(lt);
+					} else {
+						console.log('worksheet does not exist');
+						resolve([]);
+					}
+				}).catch(function(err) {
+					reject(err);
+					resolve([]);
+				});
+			} catch (err) {
+				reject(err);
+			}
 		} else {
-			console.log('worksheet does not exist');
+			console.log('workbook does not exist');
+			resolve([]);
 		}
-
-	} else {
-		console.log('workbook does not exist');
-	}
-
-	return [];
-};
+	});
+}
 
 /**
  * 设置列
