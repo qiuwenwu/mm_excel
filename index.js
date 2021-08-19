@@ -410,4 +410,11 @@ Excel.prototype.convert = function(prop, key, value, name = 'name') {
 };
 
 
+/**
+ * 清理缓存
+ */
+Excel.prototype.clear = function(){
+	
+};
+
 module.exports = Excel;

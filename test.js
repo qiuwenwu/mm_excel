@@ -106,6 +106,7 @@ async function test() {
 	ex.config.file = 'city.xlsx';
 	var file = await ex.save(jarr);
 	console.log(file);
+	ex.clear();
 }
 
 test();
