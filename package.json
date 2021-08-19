@@ -1,6 +1,6 @@
 {
     "name": "mm_excel",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "description": "这是超级美眉用来快速读写excel的拓展库",
     "main": "index.js",
     "scripts": {

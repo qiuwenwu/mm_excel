@@ -414,7 +414,9 @@ Excel.prototype.convert = function(prop, key, value, name = 'name') {
  * 清理缓存
  */
 Excel.prototype.clear = function(){
-	
+	this.list = [];
+	this.original = [];
+	this.book = null;
 };
 
 module.exports = Excel;
