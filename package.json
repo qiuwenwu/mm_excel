@@ -1,6 +1,6 @@
 {
     "name": "mm_excel",
-    "version": "1.0.8",
+    "version": "1.0.9",
     "description": "这是超级美眉用来快速读写excel的拓展库",
     "main": "index.js",
     "scripts": {
@@ -31,7 +31,6 @@
     "homepage": "https://github.com/qiuwenwu/mm_excel#readme",
     "dependencies": {
         "exceljs": "^3.9.0",
-        "mm_expand": "^1.5.1"
-    },
-    "devDependencies": {}
+        "mm_expand": "^1.5.6"
+    }
 }

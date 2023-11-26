@@ -189,9 +189,9 @@ Excel.prototype.save_filter = function(item) {
 	var jobj = Object.assign({}, item);
 	var fmt = this.config.format;
 	fmt.map((m) => {
-		if (m.id) {
+		if (m.table) {
 			for (var k in jobj) {
-				if (k == m.id) {
+				if (k == m.key) {
 					var lt = m.list;
 					for (var i = 0; i < lt.length; i++) {
 						var o = lt[i];
@@ -408,7 +408,6 @@ Excel.prototype.convert = function(prop, key, value, name = 'name') {
 	}
 	return val;
 };
-
 
 /**
  * 清理缓存
