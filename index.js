@@ -102,12 +102,14 @@ Excel.prototype.load_filter = function(item) {
 	var fmt = this.config.format;
 	fmt.map((m) => {
 		var lt = m.list;
-		if (m.id) {
+		if (!m.id) {
+			m.id = m.key;
+		}
+		if (m.table) {
 			for (var i = 0; i < lt.length; i++) {
 				var o = lt[i];
 				if (o[m.name] == item[m.key]) {
-					item[m.id] = o[m.id];
-					delete item[m.key];
+					item[m.key] = o[m.id];
 				}
 			}
 		} else {
@@ -244,7 +246,8 @@ Excel.prototype.load = function(func, nameOrId) {
 			}
 			try {
 				_this.book[ext].readFile(f.fullname(__dirname)).then(function() {
-					var sheet = _this.book.getWorksheet(nameOrId !== undefined ? nameOrId : cg.sheet);
+					var sheet = _this.book.getWorksheet(nameOrId !== undefined ? nameOrId : cg
+						.sheet);
 					if (sheet) {
 						var list = [];
 						var cols = _this.load_col(sheet);
@@ -253,9 +256,13 @@ Excel.prototype.load = function(func, nameOrId) {
 								var obj = {};
 								for (var k in cols) {
 									var val = o.getCell(Number(k)).value;
-									if (cols[k].dataType.indexOf('int') !== -1 || cols[k].dataType === 'double' || cols[k].dataType ===
-										'float') {
-										val = Number(val || '0');
+									if (val && /\-?[0-9.]+/.test(val)) {
+										if (cols[k].dataType.indexOf('int') !== -1 || cols[
+												k]
+											.dataType === 'double' || cols[k].dataType ===
+											'float') {
+											val = Number(val || '0');
+										}
 									}
 									obj[cols[k].key] = val;
 								}
@@ -266,9 +273,14 @@ Excel.prototype.load = function(func, nameOrId) {
 								var obj = {};
 								for (var k in cols) {
 									var val = o.getCell(Number(k)).value;
-									if (cols[k].dataType.indexOf('int') !== -1 || cols[k].dataType === 'double' || cols[k].dataType ===
-										'float') {
-										val = Number(val || '0');
+									if (val && /\-?[0-9.]+/.test(val)) {
+										if (cols[k].dataType.indexOf('int') !== -1 ||
+											cols[
+												k].dataType === 'double' || cols[k]
+											.dataType ===
+											'float') {
+											val = Number(val || '0');
+										}
 									}
 									obj[cols[k].key] = val;
 								}
@@ -412,7 +424,7 @@ Excel.prototype.convert = function(prop, key, value, name = 'name') {
 /**
  * 清理缓存
  */
-Excel.prototype.clear = function(){
+Excel.prototype.clear = function() {
 	this.list = [];
 	this.original = [];
 	this.book = null;
